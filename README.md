@@ -8,14 +8,14 @@ This tool solves a common MCNP problem: correctly specifying nested universe pat
 
 ## Features
 
-- ✅ **Interactive Q&A Interface** - Walks you through building universe specifications
-- ✅ **Bottom-Up Approach** - Builds the universe stack from target to global universe
-- ✅ **Tally Generation** - Creates proper F-card specifications with `<` operator syntax
-- ✅ **SDEF Generation** - Uses robust distribution method (SI/SP cards)
-- ✅ **Lattice Support** - Handles LAT=1 and LAT=2 lattices with proper index notation
-- ✅ **SD Card Detection** - Warns when segment divisor cards are required
-- ✅ **Verification Output** - Generates test deck snippets for validation
-- ✅ **Modern MCNP6 Syntax** - Uses current standards (no deprecated `:` syntax)
+-  **Interactive Q&A Interface** - Walks you through building universe specifications
+-  **Bottom-Up Approach** - Builds the universe stack from target to global universe
+-  **Tally Generation** - Creates proper F-card specifications with `<` operator syntax
+-  **SDEF Generation** - Uses robust distribution method (SI/SP cards)
+-  **Lattice Support** - Handles LAT=1 and LAT=2 lattices with proper index notation
+-  **SD Card Detection** - Warns when segment divisor cards are required
+-  **Verification Output** - Generates test deck snippets for validation
+-  **Modern MCNP6 Syntax** - Uses current standards (no deprecated `:` syntax)
 
 ## Installation
 
