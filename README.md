@@ -22,6 +22,7 @@ This tool solves a common MCNP problem: correctly specifying nested universe pat
 ### Requirements
 - Python 3.7 or higher
 - NumPy (for future coordinate transformation features)
+- If Windows, requires Curses. 
 
 ```bash
 pip install numpy
@@ -190,25 +191,18 @@ The wizard uses a **bottom-up** approach:
 4. Ask "What universe is that cell in?"
 5. Repeat until reaching Universe 0 (global)
 
-This matches how physicists think about the geometry but reverses MCNP's typical outside-in definition order.
-
-## Advanced Features (Roadmap)
+## Advanced Features (Future If I Want)
 
 ### Coordinate Transformation (Future)
 - [ ] Calculate global coordinates from local position
 - [ ] Apply TRCL/TR transformations
-- [ ] Enable accurate POS specification for SDEF
+- [ ] Enable accurate POS specification for SDEF or KSRC
 
 ### MCNP File Integration (Future)
-- [ ] Read existing MCNP input files
+- [ ] Read existing MCNP input files, point at cell and will auto trace basic structure. - montepy imp?
 - [ ] Auto-detect universe structure
 - [ ] Integrate with MontePy library
 - [ ] Validate cell IDs exist
-
-### GUI Version (Future)
-- [ ] Visual universe tree builder
-- [ ] Drag-and-drop interface
-- [ ] Real-time syntax preview
 
 ## Troubleshooting
 
@@ -272,28 +266,6 @@ SDEF CEL=d1 ERG=2.0 POS=0 0 0
 SI1 L ( 1001 < 500 < 200[5 5 0] < 50 )
 SP1 1
 ```
-
-## Best Practices
-
-1. **Always verify** with PRINT 110 before production runs
-2. **Use distributions** for SDEF (more robust than direct CEL specification)
-3. **Provide volumes** via SD cards for nested tallies
-4. **Test incrementally** - start with simpler geometry, add complexity
-5. **Document** your universe structure in comments
-
-## Contributing
-
-This tool was built based on the technical specification in the included documentation. Contributions welcome:
-
-- Bug fixes
-- MontePy integration
-- Coordinate transformation math
-- GUI development
-- Additional validation checks
-
-## License
-
-MIT License - Use freely, no warranty provided.
 
 ## Credits
 
