@@ -1,0 +1,214 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  MCNP UNIVERSE SYNTAX CHEAT SHEET                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ THE < OPERATOR ("when contained in")                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  BOTTOM-UP ORDERING (Inside → Out)
+  
+  ( Target < Parent < Grandparent < ... < Global )
+     └─┬──┘   └──┬──┘   └─────┬─────┘
+       │         │            └── Outermost container (in Universe 0)
+       │         └── Middle container
+       └── Innermost cell (what you're tallying/sourcing)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ LATTICE SYNTAX                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Indices [i j k] IMMEDIATELY follow the lattice cell ID:
+  
+  ✓ CORRECT:  Cell[i j k]
+              └─┬┘ └─┬──┘
+                │    └── Indices with SPACES
+                └── Cell ID
+  
+  ✗ WRONG:    Cell[i,j,k]    ← Commas not allowed
+  ✗ WRONG:    [i j k]<Cell   ← Indices in wrong position
+  ✗ WRONG:    Cell <[i j k]  ← Separated from cell ID
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ COMPLETE EXAMPLES                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  SCENARIO 1: Pin in Assembly in Core (no lattices)
+  ┌─────────────────────────────────────────────────┐
+  │ Geometry:                                       │
+  │   • Fuel pin = Cell 5 (in Universe 10)         │
+  │   • Assembly = Cell 2 (fills U=10, in U=100)   │
+  │   • Core     = Cell 1 (fills U=100, in U=0)    │
+  └─────────────────────────────────────────────────┘
+  
+  MCNP:  F4:N ( 5 < 2 < 1 )
+
+
+  SCENARIO 2: Pin in Lattice Assembly
+  ┌─────────────────────────────────────────────────┐
+  │ Geometry:                                       │
+  │   • Fuel pin = Cell 101 (in Universe 5)        │
+  │   • Assembly = Cell 50 (LAT=1, fills U=5)      │
+  │     Position: [3, 4, 0] in lattice             │
+  │   • Core     = Cell 1 (fills U=100, in U=0)    │
+  └─────────────────────────────────────────────────┘
+  
+  MCNP:  F4:N ( 101 < 50[3 4 0] < 1 )
+         SD4 2.75  ← REQUIRED! (volume in cm³)
+
+
+  SCENARIO 3: Multi-Level Lattice
+  ┌─────────────────────────────────────────────────┐
+  │ Geometry:                                       │
+  │   • Pellet    = Cell 1001 (in Universe 1)      │
+  │   • Pin       = Cell 500 (fills U=1, in U=10)  │
+  │   • Assembly  = Cell 200 (LAT=1, fills U=10)   │
+  │     Position: [5, 5, 0] in assembly lattice    │
+  │   • Core      = Cell 50 (LAT=1, fills U=100)   │
+  │     Position: [2, 3, 0] in core lattice        │
+  └─────────────────────────────────────────────────┘
+  
+  MCNP:  F4:N ( 1001 < 500 < 200[5 5 0] < 50[2 3 0] )
+         SD4 0.85  ← REQUIRED!
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ SDEF CARDS (Source Definition)                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Use the DISTRIBUTION METHOD (robust):
+  
+  SDEF CEL=dN [other parameters like ERG, POS]
+  SIN L ( same syntax as tally )
+  SPN 1
+  
+  Example:
+    SDEF CEL=d1 ERG=1.0
+    SI1 L ( 101 < 50[3 4 0] < 1 )
+    SP1 1
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ SD CARDS (Segment Divisor) - CRITICAL FOR LATTICES!                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  When is SD card REQUIRED?
+    → When tallying in a cell that's inside ANY lattice
+  
+  Why?
+    → MCNP can't calculate volume of individual lattice elements
+    → Without SD, it uses volume = 1.0 → WRONG RESULTS!
+  
+  Format:
+    SDN <volume_in_cm³>
+    
+    where N = tally number (SD4 for F4 tally)
+  
+  Example:
+    F4:N ( 101 < 50[3 4 0] < 1 )
+    SD4 2.75  $ Volume of Cell 101 in cm³
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ VERIFICATION TESTING                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Before production runs, TEST your specification:
+  
+  1. Create test deck:
+     SDEF CEL=d1 ERG=1.0
+     SI1 L ( your specification )
+     SP1 1
+     NPS 50
+     PRINT 110
+  
+  2. Set all materials to VOID (M0 or comment out material cards)
+  
+  3. Run MCNP
+  
+  4. Check output file for "source particle" lines
+  
+  5. Verify:
+     ✓ Particles start in correct cell
+     ✓ Correct lattice indices shown
+     ✗ No "lost" particles
+     ✗ Not in Cell 0
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ COMMON MISTAKES                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ❌ Commas in indices:         ( 101 < 50[3,4,0] < 1 )
+  ✓ Use spaces:                 ( 101 < 50[3 4 0] < 1 )
+
+  ❌ Top-down ordering:          ( 1 < 50 < 101 )
+  ✓ Bottom-up (inside-out):     ( 101 < 50 < 1 )
+
+  ❌ Wrong index position:       ( 101 < [3 4 0] 50 < 1 )
+  ✓ After cell ID:              ( 101 < 50[3 4 0] < 1 )
+
+  ❌ Missing SD card:            F4:N ( 101 < 50[3 4 0] < 1 )
+  ✓ Include volume:             F4:N ( 101 < 50[3 4 0] < 1 )
+                                SD4 2.75
+
+  ❌ Old syntax (colon):         ( 101 : 50[3 4 0] : 1 )
+  ✓ Modern (less-than):         ( 101 < 50[3 4 0] < 1 )
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ QUICK REFERENCE TABLE                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────┬──────────────────────────────────────────────────┐
+  │ Element         │ Syntax                                           │
+  ├─────────────────┼──────────────────────────────────────────────────┤
+  │ Operator        │ <  (less-than sign)                              │
+  │ Order           │ Bottom-up (innermost first)                      │
+  │ Grouping        │ ( ... )  (parentheses required)                  │
+  │ Lattice indices │ Cell[i j k]  (spaces, not commas)                │
+  │ Index position  │ Immediately after cell ID                        │
+  │ SDEF method     │ CEL=dN with SIN/SPN cards                        │
+  │ Volume card     │ SDN <volume> (for lattice tallies)               │
+  │ Verification    │ PRINT 110 with NPS 50                            │
+  └─────────────────┴──────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ READING THE SYNTAX                                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ( 101 < 50[3 4 0] < 1 )
+    │     │    │      │
+    │     │    │      └── "in Cell 1"
+    │     │    └── "at lattice position [3 4 0]"
+    │     └── "when contained in Cell 50"
+    └── "Cell 101"
+  
+  Read left-to-right: "Cell 101, when contained in Cell 50 at position
+  [3 4 0], when contained in Cell 1"
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ UNIVERSE NUMBERING                                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Universe 0:  Global/World universe (default)
+  Universe N:  User-defined (N > 0)
+  
+  In MCNP input:
+    Cell card: FILL=N means "fill this cell with Universe N"
+    Cell card: U=N means "this cell exists in Universe N"
+  
+  Example:
+    10 1 -1.0  -1         U=5      $ Cell 10 in Universe 5
+    20 0       -2  FILL=5 U=100    $ Cell 20 fills U=5, exists in U=100
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  Use the wizard: python mcnp_wizard.py                                       ║
+║  See examples:   python examples.py                                          ║
+║  Read docs:      README.md                                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
