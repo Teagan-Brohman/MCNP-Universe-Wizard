@@ -26,6 +26,7 @@ This tool solves a common MCNP problem: correctly specifying nested universe pat
 
 ```bash
 pip install numpy
+pip install windows-curses # If needed
 ```
 
 ### Quick Start
